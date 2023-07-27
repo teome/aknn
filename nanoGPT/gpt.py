@@ -11,15 +11,39 @@ learning_rate = 3e-4
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 eval_iters = 200
 
-# n_embd = 128
-# n_head = 4
-# n_layer = 3
+n_embd = 64 # 128
+n_head = 4
+n_layer = 3
 
-n_embd = 384
-n_head = 6
-n_layer = 6
+# n_embd = 384
+# n_head = 6
+# n_layer = 6
+
 dropout = 0.2
 # ------------
+
+wandb_log = False
+wandb_project = 'nanoGPTsimple'
+wandb_name = 'shakespeare'
+wandb_config = {
+    'n_embd': n_embd,
+    'n_head': n_head,
+    'n_layer': n_layer,
+    'dropout': dropout,
+    'batch_size': batch_size,
+    'block_size': block_size,
+    'max_iters': max_iters,
+    'eval_interval': eval_interval,
+    'learning_rate': learning_rate,
+    'eval_iters': eval_iters,
+    'device': device,
+    'wandb_log': wandb_log,
+}
+
+if wandb_log:
+    import wandb
+    wandb.init(project=wandb_project, name=wandb_name, config=wandb_config)
+
 
 torch.manual_seed(1337)
 
@@ -214,6 +238,8 @@ for iter in range(max_iters):
     if iter % eval_interval == 0:
         losses = estimate_loss()
         print(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
+        if wandb_log:
+            wandb.log(losses, step=iter)
 
     # sample a batch of data
     xb, yb = get_batch('train')
